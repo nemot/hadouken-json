@@ -9,5 +9,5 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/nemot/hadouken-json'
   s.license     = 'MIT'
   s.add_dependency 'virtus', '~> 1.0.5'
-  s.add_dependency 'activerecord'
+  s.add_runtime_dependency 'activerecord', ['~> 4.0.0', '~> 5.0.0', '~> 6.0.0']
 end
