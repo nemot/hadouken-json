@@ -6,29 +6,33 @@
 
 ```ruby
 class MyJsonResponse < Hadouken::Json
-  attribute :your_variable, String # I'm using Virtus.model, you can pass your argiments here
+  attribute :my_var, String # I'm using Virtus.model, you can pass your arguments like that
 
   def structure
     {
-      _title: "Some static title", # Static columns marked with leading underscore
-      _myVariable: response_type, # User any string on your chose
+      # Static columns marked with leading underscore
+      _title: "Some static title",
+      _myVariable: my_var,
+
       users: array_of({
-        companyName: '.company.name', # If value starts from "." char - it's considered to be a field from belongs_to relation
-        id: 'id', # Just a column name
-        fullName: 'name', # 'fullName' - json key, 'name' - is a column to use
-        address: "COALESCE(NULLIF(users.address, ''), users.geolocation)", # You are free to use any sql as a value actually
-        
+        companyName: '.company.name', # A name field from, the company (belongs_to association)
+        id: 'id',
+        fullName: 'name', # name - is a column name
+        address: "COALESCE(NULLIF(users.address, ''), users.geolocation)",
+
         posts: array_of({
           id: 'id',
           title: 'title',
           fullText: 'description',
           isPublished: 'published',
-        }, for: 'posts')
+        }, for: 'posts') # 'for' could be a relation or a string with relation name
+
       }, for: relation)
     }
   end
-
 end
+
+MyJsonResponse.call(relation: User.all, my_var: 'anything') # => JSON string
 ```
 
 ## Long story
