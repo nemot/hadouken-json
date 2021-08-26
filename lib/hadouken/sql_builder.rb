@@ -1,12 +1,13 @@
 class Hadouken::SqlBuilder
-  include Tea::Callable::Base
-  include Tea::Callable::WithBang
-  prepend Tea::Callable::Validatable::WithReturn
+  include Virtus.model
 
   attribute :main_class
   attribute :scope
   attribute :schema, Hash, default: {}
   attribute :decorator, Hadouken::Decorator
+  def self.call(*args)
+    new(*args).call
+  end
 
   def call
     return json_build_object_sql(schema) if scope.nil?

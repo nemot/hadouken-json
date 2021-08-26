@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Hadouken::Json
+  include ::Virtus.model
   attribute :relation, Hadouken::Virtus::ActiveRecordRelation
 
   def self.call(*args)
@@ -16,7 +17,7 @@ class Hadouken::Json
   def array_of(json_schema, *args)
     options = args[0] || {}
 
-    Hadouken::SqlBuilder.call!(
+    Hadouken::SqlBuilder.call(
       main_class: relation.klass,
       scope: options[:for],
       schema: json_schema,

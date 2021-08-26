@@ -1,5 +1,6 @@
-class Hadouken::Decorator
+# frozen_string_literal: true
 
+class Hadouken::Decorator
   attr_accessor :relation
   class << self 
     def columns(column_names, *args)

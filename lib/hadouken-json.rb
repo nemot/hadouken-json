@@ -1,5 +1,4 @@
-module Hadouken
-end
+# frozen_string_literal: true
 
 require 'hadouken/virtus/active_record_relation'
 require 'hadouken/decorator'
