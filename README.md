@@ -1,6 +1,6 @@
 ![alt text](https://github.com/nemot/hadouken-json/blob/main/assets/hadouken.png)
 
-# Hadouken - rapid JSON generator directly inside the ProsgreSQL 9.3+
+# Hadouken - rapid JSON generator directly inside the PostgreSQL 9.3+
 
 ## TL;DR
 
