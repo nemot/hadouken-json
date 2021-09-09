@@ -61,6 +61,6 @@ class Hadouken::Decorator
   end
 
   def table_name
-    self.class.name.underscore
+    @table_name ||= self.class.name.underscore.gsub('/','_')
   end
 end
