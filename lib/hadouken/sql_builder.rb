@@ -5,6 +5,7 @@ class Hadouken::SqlBuilder
   attribute :scope
   attribute :schema, Hash, default: {}
   attribute :decorator, Hadouken::Decorator
+
   def self.call(*args)
     new(*args).call
   end
@@ -49,6 +50,7 @@ class Hadouken::SqlBuilder
 
   def build_relation
     fail 'Scope should be ActiveRecord::Relation or string' if [ActiveRecord::Relation, String].none? { |klass| scope.is_a?( klass ) }
+    return main_class.from(unwound_jsonb_table) if scope_is_jsonb_array?
 
     scope.is_a?(ActiveRecord::Relation) ? scope : main_class.new(id: sample_id).instance_eval(scope)
   end
@@ -57,7 +59,7 @@ class Hadouken::SqlBuilder
     schema.extract!(*schema.select{ |_,v| v.is_a?(String) }.keys)
           .inject({}) do |h, (field, column)|
             col = (@relation&.klass&.column_names||[]).include?(column) ? [@relation.klass.table_name, column].join('.') : column
-            h.merge(field => col)
+            scope_is_jsonb_array? ? h.merge(field => "#{unwound_jsonb_table_name}.#{column.split('::')[0]}") : h.merge(field => col)
           end
   end
 
@@ -106,6 +108,20 @@ class Hadouken::SqlBuilder
 
   def sanitize_column_name(column_name)
     column_name.scan(/[.]/).length <= 1 ? "\"#{column_name.split('.').join('"."')}\"" : "(#{column_name})"
+  end
+
+  def scope_is_jsonb_array?
+    db_column = main_class.columns_hash[scope]
+    db_column&.type == :jsonb && JSON.parse(db_column.default.to_s).is_a?(Array)
+  end
+
+  def unwound_jsonb_table_name
+    @unwound_jsonb_table_name ||= ['array_from_', scope].join
+  end
+
+  def unwound_jsonb_table
+    table_structure = schema.values.map { |v| v.split('::').push('text')[0..1].join(' ') }.join(', ') 
+    "jsonb_to_recordset(#{main_class.table_name}.#{scope}) AS #{unwound_jsonb_table_name}(#{table_structure})"
   end
 
 end

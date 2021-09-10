@@ -18,7 +18,7 @@ class Hadouken::Json
     options = args[0] || {}
 
     Hadouken::SqlBuilder.call(
-      main_class: relation.klass,
+      main_class: (relation_for(options[:jsonb_field_from]) || relation).klass,
       scope: options[:for],
       schema: json_schema,
       decorator: (options[:decorate_with].is_a?(Hadouken::Decorator) ? options[:decorate_with] : nil)
@@ -26,6 +26,12 @@ class Hadouken::Json
   end
 
   private
+
+  def relation_for(scope)
+    return unless scope
+
+    scope.is_a?(ActiveRecord::Relation) ? scope : relation.klass.new(id: 1).instance_eval(scope)
+  end
 
   def execute_query(sql_query)
     ActiveRecord::Base.connection.execute(sql_query).values.first.first
