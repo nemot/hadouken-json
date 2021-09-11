@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'hadouken-json'
-  s.version     = '0.0.3'
+  s.version     = '0.0.4'
   s.summary     = "A tool to create a JSON response right inside of PostgreSQL 9.3+"
   s.description = ""
   s.authors     = ["Roman Zaytsev"]
