@@ -21,7 +21,8 @@ class Hadouken::Json
       main_class: (relation_for(options[:jsonb_field_from]) || relation).klass,
       scope: options[:for],
       schema: json_schema,
-      decorator: (options[:decorate_with].is_a?(Hadouken::Decorator) ? options[:decorate_with] : nil)
+      decorator: (options[:decorate_with].is_a?(Hadouken::Decorator) ? options[:decorate_with] : nil),
+      where_condition: options[:where]
     )
   end
 

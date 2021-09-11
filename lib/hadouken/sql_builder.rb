@@ -5,6 +5,7 @@ class Hadouken::SqlBuilder
   attribute :scope
   attribute :schema, Hash, default: {}
   attribute :decorator, Hadouken::Decorator
+  attribute :where_condition, Hash
 
   def self.call(*args)
     new(*args).call
@@ -16,6 +17,7 @@ class Hadouken::SqlBuilder
     @sql = ''
     @relation = build_relation
     apply_decorator if decorator&.valid?
+    apply_where_conditions
     @sql << @relation.select(*columns_to_select).to_sql.gsub(sample_id.to_s, primary_key)
 
     "SELECT COALESCE(json_agg(a), '[]'::JSON ) FROM (#{@sql}) a"
@@ -43,6 +45,13 @@ class Hadouken::SqlBuilder
     EOQ
   end
 
+  def apply_where_conditions
+    return unless where_condition.is_a?(Hash) && where_condition.any?
+
+    where_condition.deep_transform_keys! { |k| [unwound_jsonb_table_name,k.to_s].join('.') } if scope_is_jsonb_array?
+    @relation.where!(where_condition)
+  end
+
   def apply_decorator
     @sql << decorator.data_table_sql
     @relation.joins!(decorator.join_sql)
@@ -59,7 +68,7 @@ class Hadouken::SqlBuilder
     schema.extract!(*schema.select{ |_,v| v.is_a?(String) }.keys)
           .inject({}) do |h, (field, column)|
             col = (@relation&.klass&.column_names||[]).include?(column) ? [@relation.klass.table_name, column].join('.') : column
-            scope_is_jsonb_array? ? h.merge(field => "#{unwound_jsonb_table_name}.#{column.split('::')[0]}") : h.merge(field => col)
+            scope_is_jsonb_array? ? h.merge(field => "#{unwound_jsonb_table_name}.#{column}") : h.merge(field => col)
           end
   end
 
@@ -116,12 +125,15 @@ class Hadouken::SqlBuilder
   end
 
   def unwound_jsonb_table_name
-    @unwound_jsonb_table_name ||= ['array_from_', scope].join
+    ['records_from', scope].join('_')
+  end
+
+  def jsonb_type
+    [main_class.table_name, scope].join('_')
   end
 
   def unwound_jsonb_table
-    table_structure = schema.values.map { |v| v.split('::').push('text')[0..1].join(' ') }.join(', ') 
-    "jsonb_to_recordset(#{main_class.table_name}.#{scope}) AS #{unwound_jsonb_table_name}(#{table_structure})"
+    "jsonb_populate_recordset(null::#{jsonb_type}, #{main_class.table_name}.#{scope}) AS #{unwound_jsonb_table_name}"
   end
 
 end
